@@ -62,6 +62,10 @@
       gap: 20px;
     }
 
+    .combined-output {
+      margin-top: 20px;
+    }
+
     .output-box {
       flex: 1;
       background: #111;
@@ -116,8 +120,17 @@
     </div>
   </div>
 
+  <div class="combined-output">
+    <div class="output-box">
+      <h3>Combined Macros (Mixed, Min Lines)</h3>
+      <div class="content" id="combinedOutput">...</div>
+    </div>
+  </div>
+
   <script>
     // Created with help of various AI tools
+    const MACRO_LINE_LIMIT = 10;
+
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const jsonInput = document.getElementById('jsonInput');
@@ -125,6 +138,7 @@
     const gearOutput = document.getElementById('gearOutput');
     const gemsOutput = document.getElementById('gemsOutput');
     const enchantsOutput = document.getElementById('enchantsOutput');
+    const combinedOutput = document.getElementById('combinedOutput');
 
     /**
      * Mapping of MoP Endgame Enchant IDs to their corresponding Scroll/Item IDs.
@@ -228,8 +242,8 @@
       if (!addLines.length) return emptyText;
 
       const chunks = [];
-      for (let i = 0; i < addLines.length; i += 10) {
-        chunks.push(addLines.slice(i, i + 10).join("\n"));
+      for (let i = 0; i < addLines.length; i += MACRO_LINE_LIMIT) {
+        chunks.push(addLines.slice(i, i + MACRO_LINE_LIMIT).join("\n"));
       }
 
       return chunks.join("\n\n");
@@ -296,10 +310,52 @@
 
         enchantsOutput.textContent = enchantSections.join("\n") || "No enchants found.";
 
+        // Combined mixed macros: aggregate all addable item IDs to minimize line count.
+        const combinedCounts = {};
+        items.forEach(item => {
+          if (item && item.id) {
+            combinedCounts[item.id] = (combinedCounts[item.id] || 0) + 1;
+          }
+
+          if (item && Array.isArray(item.gems)) {
+            item.gems.forEach(gem => {
+              if (gem && gem !== 0) {
+                combinedCounts[gem] = (combinedCounts[gem] || 0) + 1;
+              }
+            });
+          }
+
+          if (item && item.enchant) {
+            const mappedEnchant = MOP_ENCHANT_MAP[item.enchant];
+            if (mappedEnchant) {
+              const enchantItemId = mappedEnchant.itemId;
+              combinedCounts[enchantItemId] = (combinedCounts[enchantItemId] || 0) + 1;
+            }
+          }
+        });
+
+        const combinedLines = Object.entries(combinedCounts)
+          .sort((a, b) => Number(a[0]) - Number(b[0]))
+          .map(([id, count]) => count > 1 ? `.add ${id} ${count}` : `.add ${id}`);
+
+        const formattedCombinedAdds = formatAddCommands(combinedLines);
+        const combinedSections = [];
+
+        if (formattedCombinedAdds) {
+          combinedSections.push(formattedCombinedAdds);
+        }
+
+        if (unmappedEnchantLines.length) {
+          combinedSections.push(unmappedEnchantLines.join("\n"));
+        }
+
+        combinedOutput.textContent = combinedSections.join("\n") || "No items found.";
+
       } catch {
         gearOutput.textContent = "Invalid JSON.";
         gemsOutput.textContent = "Invalid JSON.";
         enchantsOutput.textContent = "Invalid JSON.";
+        combinedOutput.textContent = "Invalid JSON.";
       }
     }
   </script>
