@@ -152,63 +152,38 @@
     const macroNotes = document.getElementById('macroNotes');
 
     /**
-     * Mapping of MoP Endgame Enchant IDs to their corresponding Scroll/Item IDs.
-     * Verified via Wowhead database.
+     * Mapping of MoP enchant effect IDs to consumable item IDs.
+     * Sourced from wowsims MoP database output and spot-checked on Wowhead.
      */
     const MOP_ENCHANT_MAP = {
-      // --- WEAPONS ---
-      4444: { itemId: 74728, name: "Dancing Steel" },       // Strength/Agility Proc
-      4442: { itemId: 74729, name: "Jade Spirit" },         // Intellect/Spirit Proc
-      4443: { itemId: 74726, name: "Flowing River" },       // Dodge Proc
-      4441: { itemId: 74724, name: "Windsong" },            // Crit/Haste/Mastery Proc
-      4440: { itemId: 74723, name: "Elemental Force" },     // Spell Damage Proc
-      4445: { itemId: 74725, name: "Colossus" },            // Damage Absorb Proc
-
-      // --- SHOULDERS (Inscriptions) ---
-      4803: { itemId: 87559, name: "Greater Tiger Fang Inscription" },   // Strength
-      4804: { itemId: 87560, name: "Greater Crane Wing Inscription" },   // Intellect
-      4805: { itemId: 87558, name: "Greater Ox Horn Inscription" },      // Stamina
-      4802: { itemId: 87557, name: "Greater Hyena Claw Inscription" },   // Agility
-
-      // --- BACK (Cloak) ---
-      4424: { itemId: 74713, name: "Accuracy" },           // Hit
-      4425: { itemId: 74714, name: "Greater Agility" },
-      4426: { itemId: 74715, name: "Greater Intellect" },
-      4423: { itemId: 74712, name: "Superior Critical Strike" },
-      4422: { itemId: 74711, name: "Superior Protection" },    // Armor
-
-      // --- CHEST ---
-      4419: { itemId: 74708, name: "Glorious Stats" },     // +80 All Stats
-      4418: { itemId: 74707, name: "Mighty Resilience" },
-      4420: { itemId: 74709, name: "Superior Stamina" },
-
-      // --- BRACERS ---
-      4415: { itemId: 74703, name: "Exceptional Strength" },
-      4416: { itemId: 74704, name: "Greater Agility" },
-      4417: { itemId: 74705, name: "Super Intellect" },
-      4414: { itemId: 74706, name: "Mastery" },
-
-      // --- GLOVES ---
-      4432: { itemId: 74719, name: "Super Strength" },
-      4433: { itemId: 74720, name: "Greater Haste" },
-      4434: { itemId: 74722, name: "Greater Mastery" },
-      4431: { itemId: 74721, name: "Superior Expertise" },
-
-      // --- LEGS (Armor Patches / Spellthreads) ---
-      4823: { itemId: 83765, name: "Angerhide Leg Armor" },       // Strength/Crit
-      4822: { itemId: 83764, name: "Ironscale Leg Armor" },       // Stamina/Dodge
-      4830: { itemId: 82445, name: "Shadowleather Leg Armor" },   // Agility/Crit
-      4831: { itemId: 95471, name: "Greater Cerulean Spellthread" }, // Int/Crit
-      4832: { itemId: 95470, name: "Greater Pearlescent Spellthread" }, // Int/Spirit
-
-      // --- FEET ---
-      4429: { itemId: 74716, name: "Pandaren's Step" },    // Mastery/Speed
-      4430: { itemId: 74717, name: "Greater Haste" },
-      4428: { itemId: 74718, name: "Greater Precision" },  // Hit
-
-      // --- OFF-HAND / SHIELD ---
-      4438: { itemId: 74730, name: "Greater Parry" },
-      4439: { itemId: 74731, name: "Major Intellect" }
+      4414: { itemId: 74703, name: "Enchant Bracer - Super Intellect" },
+      4415: { itemId: 74704, name: "Enchant Bracer - Exceptional Strength" },
+      4416: { itemId: 74705, name: "Enchant Bracer - Greater Agility" },
+      4417: { itemId: 74706, name: "Enchant Chest - Super Resilience" },
+      4418: { itemId: 74707, name: "Enchant Chest - Mighty Spirit" },
+      4419: { itemId: 74708, name: "Enchant Chest - Glorious Stats" },
+      4420: { itemId: 74709, name: "Enchant Chest - Superior Stamina" },
+      4422: { itemId: 74711, name: "Enchant Cloak - Greater Protection" },
+      4423: { itemId: 74712, name: "Enchant Cloak - Superior Intellect" },
+      4424: { itemId: 74713, name: "Enchant Cloak - Superior Critical Strike" },
+      4426: { itemId: 74715, name: "Enchant Boots - Greater Haste" },
+      4428: { itemId: 74717, name: "Enchant Boots - Blurred Speed" },
+      4429: { itemId: 74718, name: "Enchant Boots - Pandaren's Step" },
+      4430: { itemId: 74719, name: "Enchant Gloves - Greater Haste" },
+      4431: { itemId: 74720, name: "Enchant Gloves - Superior Expertise" },
+      4432: { itemId: 74721, name: "Enchant Gloves - Super Strength" },
+      4433: { itemId: 74722, name: "Enchant Gloves - Superior Mastery" },
+      4434: { itemId: 74729, name: "Enchant Off-Hand - Major Intellect" },
+      4441: { itemId: 74723, name: "Enchant Weapon - Windsong" },
+      4442: { itemId: 74724, name: "Enchant Weapon - Jade Spirit" },
+      4443: { itemId: 74725, name: "Enchant Weapon - Elemental Force" },
+      4444: { itemId: 74726, name: "Enchant Weapon - Dancing Steel" },
+      4445: { itemId: 74727, name: "Enchant Weapon - Colossus" },
+      4803: { itemId: 83006, name: "Greater Tiger Fang Inscription" },
+      4804: { itemId: 83007, name: "Greater Tiger Claw Inscription" },
+      4805: { itemId: 87560, name: "Greater Ox Horn Inscription" },
+      4822: { itemId: 83764, name: "Shadowleather Leg Armor" },
+      4823: { itemId: 83765, name: "Angerhide Leg Armor" }
     };
 
     // Drag & Drop
