@@ -224,6 +224,17 @@
       }, 400);
     });
 
+    function formatAddCommands(addLines, emptyText = "") {
+      if (!addLines.length) return emptyText;
+
+      const chunks = [];
+      for (let i = 0; i < addLines.length; i += 10) {
+        chunks.push(addLines.slice(i, i + 10).join("\n"));
+      }
+
+      return chunks.join("\n\n");
+    }
+
     function parseJSON(text) {
       try {
         const json = JSON.parse(text);
@@ -233,7 +244,7 @@
         const gearLines = items
           .filter(item => item && item.id)
           .map(item => `.add ${item.id}`);
-        gearOutput.textContent = gearLines.join("\n") || "No gear found.";
+        gearOutput.textContent = formatAddCommands(gearLines, "No gear found.");
 
         // Gems
         const gemCounts = {};
@@ -249,7 +260,7 @@
 
         const gemLines = Object.entries(gemCounts)
           .map(([id, count]) => `.add ${id} ${count}`);
-        gemsOutput.textContent = gemLines.join("\n") || "No gems found.";
+        gemsOutput.textContent = formatAddCommands(gemLines, "No gems found.");
 
         // Enchants
         const enchantCounts = {};
@@ -272,8 +283,18 @@
         const unmappedEnchantLines = Object.entries(unmappedEnchantCounts)
           .map(([id, count]) => `# Unmapped enchant ID ${id} x${count}`);
 
-        const combinedEnchantLines = [...enchantLines, ...unmappedEnchantLines];
-        enchantsOutput.textContent = combinedEnchantLines.join("\n") || "No enchants found.";
+        const formattedEnchantAdds = formatAddCommands(enchantLines);
+        const enchantSections = [];
+
+        if (formattedEnchantAdds) {
+          enchantSections.push(formattedEnchantAdds);
+        }
+
+        if (unmappedEnchantLines.length) {
+          enchantSections.push(unmappedEnchantLines.join("\n"));
+        }
+
+        enchantsOutput.textContent = enchantSections.join("\n") || "No enchants found.";
 
       } catch {
         gearOutput.textContent = "Invalid JSON.";
