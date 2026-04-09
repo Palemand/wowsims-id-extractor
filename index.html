@@ -66,6 +66,17 @@
       margin-top: 20px;
     }
 
+    .macro-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .macro-notes {
+      margin-top: 12px;
+      color: #ffd27a;
+    }
+
     .output-box {
       flex: 1;
       background: #111;
@@ -121,10 +132,9 @@
   </div>
 
   <div class="combined-output">
-    <div class="output-box">
-      <h3>Combined Macros (Mixed, Min Lines)</h3>
-      <div class="content" id="combinedOutput">...</div>
-    </div>
+    <h3>Combined Macros (Mixed, Min Lines)</h3>
+    <div class="macro-grid" id="macroGrid"></div>
+    <div class="content macro-notes" id="macroNotes"></div>
   </div>
 
   <script>
@@ -138,7 +148,8 @@
     const gearOutput = document.getElementById('gearOutput');
     const gemsOutput = document.getElementById('gemsOutput');
     const enchantsOutput = document.getElementById('enchantsOutput');
-    const combinedOutput = document.getElementById('combinedOutput');
+    const macroGrid = document.getElementById('macroGrid');
+    const macroNotes = document.getElementById('macroNotes');
 
     /**
      * Mapping of MoP Endgame Enchant IDs to their corresponding Scroll/Item IDs.
@@ -238,15 +249,52 @@
       }, 400);
     });
 
-    function formatAddCommands(addLines, emptyText = "") {
-      if (!addLines.length) return emptyText;
-
+    function splitAddCommandsIntoMacros(addLines) {
       const chunks = [];
       for (let i = 0; i < addLines.length; i += MACRO_LINE_LIMIT) {
-        chunks.push(addLines.slice(i, i + MACRO_LINE_LIMIT).join("\n"));
+        chunks.push(addLines.slice(i, i + MACRO_LINE_LIMIT));
+      }
+      return chunks;
+    }
+
+    function renderCombinedMacros(addLines, noteLines = []) {
+      macroGrid.innerHTML = "";
+
+      const macroChunks = splitAddCommandsIntoMacros(addLines);
+
+      if (!macroChunks.length) {
+        const emptyBox = document.createElement('div');
+        emptyBox.className = 'output-box';
+
+        const title = document.createElement('h3');
+        title.textContent = 'Macro 1 (0 items)';
+
+        const content = document.createElement('div');
+        content.className = 'content';
+        content.textContent = 'No items found.';
+
+        emptyBox.appendChild(title);
+        emptyBox.appendChild(content);
+        macroGrid.appendChild(emptyBox);
+      } else {
+        macroChunks.forEach((chunk, index) => {
+          const macroBox = document.createElement('div');
+          macroBox.className = 'output-box';
+
+          const title = document.createElement('h3');
+          title.textContent = `Macro ${index + 1} (${chunk.length} items)`;
+
+          const content = document.createElement('div');
+          content.className = 'content';
+          content.textContent = chunk.join("\n");
+
+          macroBox.appendChild(title);
+          macroBox.appendChild(content);
+          macroGrid.appendChild(macroBox);
+        });
       }
 
-      return chunks.join("\n\n");
+      macroNotes.textContent = noteLines.join("\n");
     }
 
     function parseJSON(text) {
@@ -258,7 +306,7 @@
         const gearLines = items
           .filter(item => item && item.id)
           .map(item => `.add ${item.id}`);
-        gearOutput.textContent = formatAddCommands(gearLines, "No gear found.");
+        gearOutput.textContent = gearLines.join("\n") || "No gear found.";
 
         // Gems
         const gemCounts = {};
@@ -274,7 +322,7 @@
 
         const gemLines = Object.entries(gemCounts)
           .map(([id, count]) => `.add ${id} ${count}`);
-        gemsOutput.textContent = formatAddCommands(gemLines, "No gems found.");
+        gemsOutput.textContent = gemLines.join("\n") || "No gems found.";
 
         // Enchants
         const enchantCounts = {};
@@ -297,18 +345,8 @@
         const unmappedEnchantLines = Object.entries(unmappedEnchantCounts)
           .map(([id, count]) => `# Unmapped enchant ID ${id} x${count}`);
 
-        const formattedEnchantAdds = formatAddCommands(enchantLines);
-        const enchantSections = [];
-
-        if (formattedEnchantAdds) {
-          enchantSections.push(formattedEnchantAdds);
-        }
-
-        if (unmappedEnchantLines.length) {
-          enchantSections.push(unmappedEnchantLines.join("\n"));
-        }
-
-        enchantsOutput.textContent = enchantSections.join("\n") || "No enchants found.";
+        const combinedEnchantLines = [...enchantLines, ...unmappedEnchantLines];
+        enchantsOutput.textContent = combinedEnchantLines.join("\n") || "No enchants found.";
 
         // Combined mixed macros: aggregate all addable item IDs to minimize line count.
         const combinedCounts = {};
@@ -338,24 +376,14 @@
           .sort((a, b) => Number(a[0]) - Number(b[0]))
           .map(([id, count]) => count > 1 ? `.add ${id} ${count}` : `.add ${id}`);
 
-        const formattedCombinedAdds = formatAddCommands(combinedLines);
-        const combinedSections = [];
-
-        if (formattedCombinedAdds) {
-          combinedSections.push(formattedCombinedAdds);
-        }
-
-        if (unmappedEnchantLines.length) {
-          combinedSections.push(unmappedEnchantLines.join("\n"));
-        }
-
-        combinedOutput.textContent = combinedSections.join("\n") || "No items found.";
+        renderCombinedMacros(combinedLines, unmappedEnchantLines);
 
       } catch {
         gearOutput.textContent = "Invalid JSON.";
         gemsOutput.textContent = "Invalid JSON.";
         enchantsOutput.textContent = "Invalid JSON.";
-        combinedOutput.textContent = "Invalid JSON.";
+        macroGrid.innerHTML = "";
+        macroNotes.textContent = "Invalid JSON.";
       }
     }
   </script>
